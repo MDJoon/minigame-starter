@@ -40,6 +40,13 @@ object Command {
                     }
                 }
             }
+
+            then("start") {
+                executes {
+                    val game = GameManager.getGame(player)
+                    game?.start()
+                }
+            }
         }
     }
 }
