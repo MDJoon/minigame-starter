@@ -8,7 +8,7 @@ import org.bukkit.Bukkit
 object Command {
 
     fun register(plugin: PluginKommand) {
-        plugin.register("starter") {
+        plugin.register("starter", "str") {
             requires { playerOrNull != null && isPlayer }
             then("world") {
                 executes {

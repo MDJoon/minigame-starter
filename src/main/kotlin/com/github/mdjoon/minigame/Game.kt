@@ -2,10 +2,8 @@ package com.github.mdjoon.minigame
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
-import org.bukkit.Bukkit
-import org.bukkit.Location
-import org.bukkit.World
-import org.bukkit.WorldCreator
+import net.kyori.adventure.title.Title
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -33,17 +31,16 @@ class Game : Runnable, Listener {
     fun start() {
         isProcessing = true
         val creator = WorldCreator(taskId.toString())
-        creator.copy(GameManager.snowLocation.world)
         gameWorld = creator.createWorld()!!
 
         spawnLocation = GameManager.snowLocation.clone().apply {
             world = gameWorld
         }
 
-        players.forEach {
-            it.teleport(spawnLocation)
-            it.sendMessage("시작!")
-        }
+        val timer = Timer()
+        val task = Bukkit.getScheduler().runTaskTimer(GameManager.plugin, timer, 0L, 1L)
+
+        timer.taskId = task.taskId
     }
 
     private fun stop() {
@@ -62,6 +59,7 @@ class Game : Runnable, Listener {
 
         Bukkit.unloadWorld(gameWorld, false)
         FileManager.deleteFolder(gameWorld.worldFolder)
+        Bukkit.getWorlds().remove(gameWorld)
         players.clear()
         GameManager.games.remove(this)
     }
@@ -101,6 +99,37 @@ class Game : Runnable, Listener {
         if(players.contains(player)) {
             removePlayer(player)
             event.quitMessage(Component.text("${player.name}님이 퇴장하셨습니다!").color(TextColor.color(0xFF5555)))
+        }
+        player.teleport(Bukkit.getWorld("world")?.spawnLocation!!)
+    }
+
+    inner class Timer : Runnable {
+        var tick = 10 * 20
+        var taskId = 0
+
+        override fun run() {
+            if(tick == 10 * 20) {
+                players.forEach {
+                    it.sendMessage("10초후 게임이 시작됩니다...")
+                }
+            }
+
+            if(tick < 5 * 20 && tick % 20 == 0) {
+                players.forEach {
+                    it.sendMessage("[@] ${ChatColor.RED}게임 시작까지 ${ChatColor.YELLOW}${tick / 20 + 1}${ChatColor.RED}초 남았습니다!")
+                }
+            }
+
+            if(tick < 0) {
+                players.forEach {
+                    it.teleport(spawnLocation)
+                    it.sendMessage("시작!")
+                }
+
+                Bukkit.getScheduler().cancelTask(taskId)
+            }
+
+            tick--
         }
     }
 
