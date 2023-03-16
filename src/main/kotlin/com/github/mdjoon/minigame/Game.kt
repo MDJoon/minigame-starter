@@ -3,15 +3,19 @@ package com.github.mdjoon.minigame
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Bukkit
+import org.bukkit.Location
+import org.bukkit.World
+import org.bukkit.WorldCreator
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
-import org.bukkit.event.player.PlayerEvent
-import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerQuitEvent
 
 class Game : Runnable, Listener {
+    private lateinit var gameWorld: World
+    private lateinit var spawnLocation: Location
+
     val players = mutableListOf<Player>()
     var isProcessing = false
     var isFull = false
@@ -28,21 +32,37 @@ class Game : Runnable, Listener {
 
     fun start() {
         isProcessing = true
+        val creator = WorldCreator(taskId.toString())
+        creator.copy(GameManager.snowLocation.world)
+        gameWorld = creator.createWorld()!!
+
+        spawnLocation = GameManager.snowLocation.clone().apply {
+            world = gameWorld
+        }
+
         players.forEach {
-            it.teleport(GameManager.snowLocation)
+            it.teleport(spawnLocation)
             it.sendMessage("시작!")
         }
     }
 
     private fun stop() {
         isProcessing = false
-        players.clear()
-
         Bukkit.getScheduler().cancelTask(taskId)
 
         PlayerQuitEvent.getHandlerList().unregister(this)
         PlayerDeathEvent.getHandlerList().unregister(this)
 
+        players.forEach {
+            val location = Bukkit.getWorld("world")?.spawnLocation
+            if (location != null) {
+                it.teleport(location)
+            }
+        }
+
+        Bukkit.unloadWorld(gameWorld, false)
+        FileManager.deleteFolder(gameWorld.worldFolder)
+        players.clear()
         GameManager.games.remove(this)
     }
 

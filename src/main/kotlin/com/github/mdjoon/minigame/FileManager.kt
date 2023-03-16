@@ -2,6 +2,7 @@ package com.github.mdjoon.minigame
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import java.io.File
 
 object FileManager {
     private val plugin = GameManager.plugin
@@ -36,5 +37,19 @@ object FileManager {
         }
 
         return null
+    }
+
+    fun deleteFolder(path: File) {
+        if(path.exists()) {
+            path.listFiles().forEach {
+                if(it.isDirectory) {
+                    deleteFolder(it)
+                } else {
+                    it.delete()
+                }
+            }
+
+            path.delete()
+        }
     }
 }

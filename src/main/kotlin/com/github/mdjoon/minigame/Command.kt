@@ -1,5 +1,6 @@
 package com.github.mdjoon.minigame
 
+import com.destroystokyo.paper.profile.PlayerProfile
 import io.github.monun.kommand.PluginKommand
 import io.github.monun.kommand.getValue
 import org.bukkit.Bukkit
@@ -21,8 +22,7 @@ object Command {
                     GameManager.snowLocation = player.location
                     player.sendMessage("현재 위치를 게임 포인트로 설정하였습니다.")
                 }
-            }
-
+           }
             then("join") {
                 executes {
                     if(!GameManager.isInPlayer(player)) {
