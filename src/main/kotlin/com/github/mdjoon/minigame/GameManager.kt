@@ -1,14 +1,29 @@
 package com.github.mdjoon.minigame
 
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.entity.Player
+import org.bukkit.plugin.java.JavaPlugin
 
 object GameManager {
     val games = mutableListOf<Game>()
+    lateinit var plugin: JavaPlugin
 
-    const val limit = 10
+    var limit : Int
+        get() {
+            return FileManager.get("limit") as Int
+        }
+        set(value) {
+            FileManager.write("limit", value)
+        }
 
-    lateinit var snowLocation : Location
+    var snowLocation : Location
+        get() {
+            return FileManager.getLocation("location")!!
+        }
+        set(value) {
+            FileManager.writeLocation("location", value)
+        }
 
     fun isInPlayer(player: Player) : Boolean {
         games.forEach {
@@ -36,4 +51,13 @@ object GameManager {
         games.add(game)
         return game
     }
+
+    fun startGame(game: Game) {
+        game.start()
+        Bukkit.getPluginManager().registerEvents(game, plugin)
+        val task = Bukkit.getScheduler().runTaskTimer(plugin, game, 0L, 1L)
+
+        game.taskId = task.taskId
+    }
+
 }
