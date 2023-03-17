@@ -1,9 +1,13 @@
 package com.github.mdjoon.minigame
 
 import com.destroystokyo.paper.profile.PlayerProfile
+import io.github.monun.kommand.KommandArgument
 import io.github.monun.kommand.PluginKommand
 import io.github.monun.kommand.getValue
-import org.bukkit.Bukkit
+import org.bukkit.*
+import org.bukkit.generator.BiomeProvider
+import org.bukkit.generator.ChunkGenerator
+import org.codehaus.plexus.util.FileUtils
 
 object Command {
 
@@ -11,9 +15,49 @@ object Command {
         plugin.register("starter", "str") {
             requires { playerOrNull != null && isPlayer }
             then("world") {
-                executes {
-                    val world = player.world
-                    player.sendMessage(Bukkit.getWorlds().indexOf(world).toString())
+                then("name" to string()) {
+                    executes {
+                        val name : String by it
+                        val worldCreator = WorldCreator.name(name)
+                        worldCreator.type(WorldType.FLAT)
+                        val world = worldCreator.createWorld()
+                        world?.apply {
+                            setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false)
+                            setGameRule(GameRule.DO_MOB_SPAWNING, false)
+                            setGameRule(GameRule.DO_MOB_LOOT, false)
+                        }
+                    }
+                }
+            }
+
+            then("switch") {
+                then("world" to string()) {
+                    executes {
+                        val world : String by it
+                        player.teleport(Bukkit.getWorld(world)?.spawnLocation!!)
+                    }
+                }
+            }
+
+            then("remove") {
+                then("str" to string()) {
+                    executes {
+                        val str : String by it
+                        val world = Bukkit.getWorld(str)!!
+                        Bukkit.unloadWorld(world, false)
+                        Bukkit.getWorlds().remove(world)
+                        FileUtils.deleteDirectory(world.worldFolder)
+                    }
+                }
+            }
+
+            then("copyWorld") {
+                then("world" to dynamicByMap(Bukkit.getWorlds().associateBy { it.name })) {
+                    executes {
+                        val world : World by it
+                        val copied = FileManager.copyWorld(world, "cop")
+                        player.teleport(copied.spawnLocation)
+                    }
                 }
             }
 
@@ -22,7 +66,7 @@ object Command {
                     GameManager.snowLocation = player.location
                     player.sendMessage("현재 위치를 게임 포인트로 설정하였습니다.")
                 }
-           }
+            }
             then("join") {
                 executes {
                     if(!GameManager.isInPlayer(player)) {

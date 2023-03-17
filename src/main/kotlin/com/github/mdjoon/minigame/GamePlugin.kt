@@ -17,7 +17,7 @@ class GamePlugin : JavaPlugin() {
 
     override fun onDisable() {
         server.onlinePlayers.forEach {
-            it.teleport(Bukkit.getWorld("world")?.spawnLocation!!)
+            it.teleport(GameManager.spawnWorld.spawnLocation)
         }
     }
 }

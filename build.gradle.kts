@@ -31,7 +31,7 @@ tasks {
 
     create<Jar>("paperJar") {
         from(sourceSets["main"].output)
-        archiveBaseName.set("plugin-template")
+        archiveBaseName.set("minigame-start")
         archiveVersion.set("") // For bukkit plugin update
 
         doLast {

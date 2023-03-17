@@ -9,6 +9,8 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.util.FileUtil
+import org.codehaus.plexus.util.FileUtils
 
 class Game : Runnable, Listener {
     private lateinit var gameWorld: World
@@ -30,8 +32,8 @@ class Game : Runnable, Listener {
 
     fun start() {
         isProcessing = true
-        val creator = WorldCreator(taskId.toString())
-        gameWorld = creator.createWorld()!!
+        val copiedWorld = FileManager.copyWorld(GameManager.snowLocation.world, taskId.toString())
+        gameWorld = copiedWorld
 
         spawnLocation = GameManager.snowLocation.clone().apply {
             world = gameWorld
@@ -51,15 +53,14 @@ class Game : Runnable, Listener {
         PlayerDeathEvent.getHandlerList().unregister(this)
 
         players.forEach {
-            val location = Bukkit.getWorld("world")?.spawnLocation
-            if (location != null) {
-                it.teleport(location)
-            }
+            val location = GameManager.spawnWorld.spawnLocation
+            it.teleport(location)
         }
 
         Bukkit.unloadWorld(gameWorld, false)
-        FileManager.deleteFolder(gameWorld.worldFolder)
         Bukkit.getWorlds().remove(gameWorld)
+        FileUtils.deleteDirectory(gameWorld.worldFolder)
+
         players.clear()
         GameManager.games.remove(this)
     }

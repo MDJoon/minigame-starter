@@ -2,7 +2,12 @@ package com.github.mdjoon.minigame
 
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.World
+import org.bukkit.WorldCreator
+import org.bukkit.command.SimpleCommandMap
+import org.bukkit.plugin.Plugin
 import java.io.*
+import java.lang.reflect.Field
 
 object FileManager {
     private val plugin = GameManager.plugin
@@ -39,21 +44,7 @@ object FileManager {
         return null
     }
 
-    fun deleteFolder(path: File) {
-        if(path.exists()) {
-            path.listFiles().forEach {
-                if(it.isDirectory) {
-                    deleteFolder(it)
-                } else {
-                    it.delete()
-                }
-            }
-
-            path.delete()
-        }
-    }
-
-    fun copyWorld(source: File, target: File) {
+    private fun copyWorldFolder(source: File, target: File) {
         try {
             val ignore = listOf("uid.dat", "session.dat")
             if (!ignore.contains(source.name)) {
@@ -64,7 +55,7 @@ object FileManager {
                     for (file in files) {
                         val srcFile = File(source, file)
                         val destFile = File(target, file)
-                        copyWorld(srcFile, destFile)
+                        copyWorldFolder(srcFile, destFile)
                     }
                 } else {
                     val inStream: InputStream = FileInputStream(source)
@@ -79,7 +70,12 @@ object FileManager {
                 }
             }
         } catch (e: IOException) {
-            e.printStackTrace()
+
         }
+    }
+
+    fun copyWorld(world: World, worldName: String) : World {
+        copyWorldFolder(world.worldFolder,  File(Bukkit.getWorldContainer(), worldName))
+        return WorldCreator.name(worldName).createWorld()!!
     }
 }

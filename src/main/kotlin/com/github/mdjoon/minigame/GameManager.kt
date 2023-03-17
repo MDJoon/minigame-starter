@@ -19,11 +19,13 @@ object GameManager {
 
     var snowLocation : Location
         get() {
-            return FileManager.getLocation("location")!!
+            return FileManager.getLocation("snowLocation")!!
         }
         set(value) {
-            FileManager.writeLocation("location", value)
+            FileManager.writeLocation("snowLocation", value)
         }
+
+    val spawnWorld = Bukkit.getWorld("world")!!
 
     fun isInPlayer(player: Player) : Boolean {
         games.forEach {
